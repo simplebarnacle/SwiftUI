@@ -10,6 +10,7 @@ import SwiftUI
 struct DiaryListView: View {
     
     @StateObject var vm: DiaryListViewModel
+    @State var isPresenting: Bool = false
     
     let layout: [GridItem] = [
         GridItem(.flexible()),
@@ -38,7 +39,8 @@ struct DiaryListView: View {
                                 ForEach(orderedItems) {item in
                                     
                                     NavigationLink {
-                                        DiaryDetailsView(diary: item)
+                                        let vm = DiaryDetailsViewModel(diaries: $vm.list, diary: item)
+                                        DiaryDetailsView(vm: vm)
                                     } label: {
                                         MoodDiaryCell(diary: item)
                                             .frame(height: 50)
@@ -59,6 +61,7 @@ struct DiaryListView: View {
                 HStack {
                     Button {
                         print("New Button Tapped")
+                        isPresenting = true
                     } label: {
                         Image(systemName: "plus")
                             .resizable()
@@ -71,8 +74,14 @@ struct DiaryListView: View {
                     .cornerRadius(40)
                 }
             }
-            
             .navigationTitle("Emotion Diary")
+        }
+        .sheet(isPresented: $isPresenting) {
+            let vm = DiaryViewModel(isPresented: $isPresenting, diaries: $vm.list)
+            DiaryDateInputView(vm: vm)
+        }
+        .onAppear {
+            vm.fetch()
         }
     }
 }
@@ -100,6 +109,6 @@ extension DiaryListView {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        DiaryListView(vm: DiaryListViewModel())
+        DiaryListView(vm: DiaryListViewModel(storage: MoodDiaryStorage()))
     }
 }
